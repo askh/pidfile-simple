@@ -61,7 +61,7 @@ class PidFileSimple
       file_pid_str = f.read
       begin
         file_pid = Integer(file_pid_str)
-      rescue ArgumentError => e
+      rescue ArgumentError
         return false
       end      
       if file_pid == our_pid
@@ -78,7 +78,7 @@ class PidFileSimple
   def unlink_if_exists
     begin
       File.unlink(@pid_full_name)
-    rescue Errno::ENOENT => e
+    rescue Errno::ENOENT
     end
   end
   
@@ -90,9 +90,9 @@ class PidFileSimple
       if Process.getpgid(pid)
         return true
       end
-    rescue Errno::ESRCH => e
+    rescue Errno::ESRCH
       return false
-    rescue ArgumentError => e
+    rescue ArgumentError
       return false
     end
     raise 'Program Logic Error'
