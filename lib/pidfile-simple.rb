@@ -33,22 +33,32 @@ class PidFileSimple
   end
   
   def open
-    File.open(@pid_full_name, 'r') do |f|
-      f.flock(File::LOCK_EX)
-      if process_running?(f)
-        # f.flock(File::LOCK_UN)
-        throw ProcessExistsError
+    loop do
+      begin
+        File.open(@pid_full_name, 'r') do |f|
+          f.flock(File::LOCK_EX)
+          if process_running?(f)
+            # f.flock(File::LOCK_UN)
+            throw ProcessExistsError
+          end
+          unlink_if_exists
+        end
+      rescue Errno::ENOENT
       end
-      unlink_if_exists
-    end
-    File.open(@pid_full_name, 'r+') do |f|
-      f.flock(File::LOCK_EX)
-      if process_running(f)
-        # f.flock(File::LOCK_UN)
-        throw DuplicationError
+      begin
+        File.open(@pid_full_name,
+                  File::Constants::RDWR|File::Constants::CREAT|File::Constants::EXCL) do |f|
+          f.flock(File::LOCK_EX)
+          if process_running?(f)
+            # f.flock(File::LOCK_UN)
+            throw ProcessExistsError
+          end
+          write_pid(f)
+          # f.flock(File::LOCK_UN)
+        end
+        break
+      rescue Errno::EEXIST
       end
-      write_pid(f)
-      # f.flock(File::LOCK_UN)
     end
     yield
     unlink_if_exists
@@ -83,8 +93,8 @@ class PidFileSimple
   end
   
   def process_running?(file_handle)
-    f.seek(0)
-    pid_str = f.read
+    file_handle.seek(0)
+    pid_str = file_handle.read
     begin
       pid = Integer(pid_str)
       if Process.getpgid(pid)

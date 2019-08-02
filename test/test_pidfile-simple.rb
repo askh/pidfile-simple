@@ -7,7 +7,7 @@ class PidFileSimpleTest < Minitest::Test
 
   def test_create_pid_file
 
-    pid_file_was_created = nil
+    pid_file_now_exists = nil
     pid_file_contains_integer = nil
     pid_file_contains_our_pid = nil
     
@@ -15,12 +15,11 @@ class PidFileSimpleTest < Minitest::Test
       pidfile = 'test.pid'
       pid = $$
       pid_file_full_name = File.join(tmpdir, pidfile)
-      PidFileSimple::new(piddir: tmpdir, pidfile: 'test.pid') do
-        
-        if !File.file?(pid_file_full_name)
-          pid_file_was_created = false
-        else
-          pid_file_was_created = true
+      pidfile_simple = PidFileSimple::new(piddir: tmpdir, pidfile: 'test.pid')
+      pidfile_simple.open do
+        pid_file_now_exists = File.file?(pid_file_full_name)
+        assert pid_file_now_exists, 'PID file not exists'
+        if pid_file_now_exists
           File.open(pid_file_full_name, 'r') do |f|
             content = f.read
             content_int = nil
@@ -34,17 +33,9 @@ class PidFileSimpleTest < Minitest::Test
             end
           end
         end
-        
       end
     end
-
-    assert pid_file_was_created, 'PID file not exists'
-
   end
 
-  # def test_double_run
-
-  # end
-  
 end
 
