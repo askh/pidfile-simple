@@ -39,7 +39,7 @@ class PidFileSimple
           f.flock(File::LOCK_EX)
           if process_running?(f)
             # f.flock(File::LOCK_UN)
-            throw ProcessExistsError
+            raise ProcessExistsError
           end
           unlink_if_exists
         end
@@ -51,7 +51,7 @@ class PidFileSimple
           f.flock(File::LOCK_EX)
           if process_running?(f)
             # f.flock(File::LOCK_UN)
-            throw ProcessExistsError
+            raise ProcessExistsError
           end
           write_pid(f)
           # f.flock(File::LOCK_UN)
